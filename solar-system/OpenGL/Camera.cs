@@ -159,7 +159,7 @@ namespace OpenGL
         public void SetFocus(Planet p)
         {
             focus = p;
-            Depth = (float)p.ScenicRadius * 3f;
+            Depth = (float)p.PlanetRadius * 3f;
         }
     }
 }

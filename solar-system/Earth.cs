@@ -70,32 +70,32 @@ namespace SolarSystem
             double deltaHours = hoursPerSecond * delta;
             double deltaDays = deltaHours / 24.0;
 
-            if (PeriodAngle < Math.PI + longitudePerihelionRadians)
+            if (OrbitalPheta < Math.PI + longitudePerihelionRadians)
                 this.eccentricAnomaly += deltaDays / OrbitalPeriod * Math.PI * 2;
-            if (PeriodAngle > Math.PI + longitudePerihelionRadians)
+            if (OrbitalPheta > Math.PI + longitudePerihelionRadians)
                 this.eccentricAnomaly -= deltaDays / OrbitalPeriod * Math.PI * 2;        
 
             if (OrbitalPeriod != 0)
-                PeriodAngle += deltaDays / OrbitalPeriod * Math.PI * 2;
-            if (HoursPerRotation != 0)
-                RotationAngle += deltaHours / HoursPerRotation * Math.PI * 2;
+                OrbitalPheta += deltaDays / OrbitalPeriod * Math.PI * 2;
+            if (RotationalPeriod != 0)
+                RotationalPheta += deltaHours / RotationalPeriod * Math.PI * 2;
 
-            if (PeriodAngle > Math.PI * 2 + longitudePerihelionRadians)
-                PeriodAngle -= (Math.PI * 2);
-            if (RotationAngle > Math.PI * 2)
-                RotationAngle -= (Math.PI * 2);
+            if (OrbitalPheta > Math.PI * 2 + longitudePerihelionRadians)
+                OrbitalPheta -= (Math.PI * 2);
+            if (RotationalPheta > Math.PI * 2)
+                RotationalPheta -= (Math.PI * 2);
 
             ClearRoatation();
-            RotateYBy((float)RotationAngle);
+            RotateYBy((float)RotationalPheta);
             RotateXBy(AxisTilt);
 
             //if (parent != null)
             //this.SetTranslation(new Vector3(Math.Cos(PeriodAngle) * ScenicDistance + parent.Translation.X, 0 + parent.Translation.Y, Math.Sin(PeriodAngle) * ScenicDistance + parent.Translation.Z));
             if (parent != null)
             {
-                float x = (float)(ScenicDistance * Math.Cos(PeriodAngle) + parent.Translation.X);
+                float x = (float)(DistanceFromParent * Math.Cos(OrbitalPheta) + parent.Translation.X);
                 float y = 0;
-                float z = (float)(ScenicDistance * Math.Sin(PeriodAngle) + parent.Translation.Z);
+                float z = (float)(DistanceFromParent * Math.Sin(OrbitalPheta) + parent.Translation.Z);
                 this.SetTranslation(new Vector3(x, y, z));
                 //this.setPosition(Math.Cos(PeriodAngle) * ScenicDistance + parent.Position.X, 0 + parent.Position.Y, Math.Sin(PeriodAngle) * ScenicDistance + parent.Position.Z);
             }

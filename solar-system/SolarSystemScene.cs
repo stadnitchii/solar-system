@@ -293,6 +293,8 @@ namespace SolarSystem
         {
             cam.Projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(70), gw.Width / (float)gw.Height, .1f, 100000f);
             GL.Viewport(0, 0, gw.Width, gw.Height);
+
+            guiManager.WindowResized(gw);
         }
 
         public void KeyDown(OpenTK.Input.KeyboardKeyEventArgs e)

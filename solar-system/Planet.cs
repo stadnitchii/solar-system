@@ -1,7 +1,6 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenGL;
-using SolarSystem;
 using System;
 
 namespace SolarSystem
@@ -9,35 +8,31 @@ namespace SolarSystem
     public partial class Planet : Model
     {
         #region Planet Properties
-        //matrix representing the axis tilt
+        //angle(radians) of axial tilt
         public float AxisTilt { get; protected set; }
 
         //distance from center to center of parent
-        public double ScenicDistance { get; protected set; }
+        public double DistanceFromParent { get; protected set; }
 
-        //distance from center to center of parent (realistic)
-        public double RealisticDistance { get; protected set; }
+        //size of the planet
+        public double PlanetRadius { get; protected set; }
 
-        //angle of rotaton
-        public double RotationAngle { get; protected set; }
+        //time it takes to complete a rotation
+        public double RotationalPeriod { get; protected set; }
 
-        //self
-        public double HoursPerRotation { get; protected set; }
-
-        //angle of rotation from parent
-        public double PeriodAngle { get; protected set; }
-
-        //self
-        public int RevolutionOrientation { get; protected set; }
-
-        //self
+        //time it takes to complete an orbit
         public double OrbitalPeriod { get; protected set; }
 
-        //realistic size
-        public double RealisticRadius { get; protected set; }
 
-        //size for scenic view
-        public double ScenicRadius { get; protected set; }
+        //-1 = clockwise
+        public int OrbitalOrientation { get; protected set; }
+
+        //current angle in the rotation
+        public double RotationalPheta { get; protected set; }
+
+        //current angle in the orbit
+        public double OrbitalPheta { get; protected set; }
+
         #endregion
 
         //Graphical representation of the orbit
@@ -49,39 +44,29 @@ namespace SolarSystem
 
         protected VAO axisLine;
 
-        protected ShaderProgram lineShader;
-
         //parent wich it roatates around
         protected Planet parent;
 
-        public Planet(string dataBaseName, PlanetParameters param, Planet parent, VAO vao, Texture t)
+        public Planet(string databaseName, PlanetParameters parameters, Planet parent, VAO vao, Texture t)
             : base(vao, t)
         {
             this.parent = parent;
-            this.RevolutionOrientation = -1;
+            this.OrbitalOrientation = -1;
             this.DrawAxisTilt = true;
-            this.DrawOrbit = false;
+            this.DrawOrbit = true;
 
-            this.ScenicDistance = param.DFSScenic[dataBaseName];
-            this.HoursPerRotation = param.RotationPeriod[dataBaseName];
-            this.AxisTilt =  (float)MathHelper.DegreesToRadians(param.AxialTilt[dataBaseName]);
-            this.RealisticRadius = param.RadiusRealistic[dataBaseName];
-            this.ScenicRadius = param.RadiusScenic[dataBaseName];
-            this.setScale((float)ScenicRadius);
-            this.OrbitalPeriod = param.OrbitalPeriod[dataBaseName];
-            this.inclinationAngle = param.InclinationAngle[dataBaseName];
-            this.longitudeAscendingNode = param.LongitudeAscendingNode[dataBaseName];
-            this.longitudePerihelion = param.LongitudePerihelion[dataBaseName];
-            this.eccentricity = param.Eccentricity[dataBaseName];
-            this.longitudeAscendingNodeRadians = MathHelper.DegreesToRadians(longitudeAscendingNode);
-            this.longitudePerihelionRadians = MathHelper.DegreesToRadians(longitudePerihelion);
-            this.inclinationAngleRadians = MathHelper.DegreesToRadians(inclinationAngle);
-            this.PeriodAngle = longitudePerihelionRadians;
-            this.eccentricAnomaly = 0;
+            this.AxisTilt = (float)MathHelper.DegreesToRadians(parameters.AxialTilt[databaseName]);
+            this.PlanetRadius = parameters.PlanetRadius[databaseName];
+            this.DistanceFromParent = parameters.DistanceFromSun[databaseName];
+
+            this.RotationalPeriod = parameters.RotationPeriod[databaseName];
+            this.OrbitalPeriod = parameters.OrbitalPeriod[databaseName];
+            
+            this.setScale((float)PlanetRadius);
 
             if (parent != null)
             {
-                this.Orbit = new Orbit(this, parent.Translation, this.ScenicDistance, 360);
+                this.Orbit = new Orbit(this, parent.Translation, this.DistanceFromParent, 120);
                 DrawOrbit = true;
             }
 
@@ -116,36 +101,30 @@ namespace SolarSystem
             double deltaDays = deltaHours / 24.0;
 
             if (OrbitalPeriod != 0)
-                PeriodAngle += deltaDays / OrbitalPeriod * Math.PI * 2;
-            if (HoursPerRotation != 0)
-                RotationAngle += deltaHours / HoursPerRotation * Math.PI * 2;
+                OrbitalPheta += deltaDays / OrbitalPeriod * Math.PI * 2;
+            if (RotationalPeriod != 0)
+                RotationalPheta += deltaHours / RotationalPeriod * Math.PI * 2;
 
-            if (PeriodAngle > Math.PI * 2 + longitudePerihelionRadians)
-                PeriodAngle -= (Math.PI * 2);
-            if (RotationAngle > Math.PI * 2)
-                RotationAngle -= (Math.PI * 2);
+            //limit angle to (0 - 360) 0 - 2PI
+            if (OrbitalPheta > Math.PI * 2)
+                OrbitalPheta -= (Math.PI * 2);
+            if (RotationalPheta > Math.PI * 2)
+                RotationalPheta -= (Math.PI * 2);
 
             ClearRoatation();
-            RotateYBy((float)RotationAngle);
+            RotateYBy((float)RotationalPheta);
             RotateXBy(AxisTilt);
           
             if (parent != null)
             {
-                float x = (float)(ScenicDistance * Math.Cos(PeriodAngle) + parent.Translation.X);
+                float x = (float)(DistanceFromParent * Math.Cos(OrbitalPheta) + parent.Translation.X);
                 float y = 0;
-                float z = (float)(ScenicDistance * Math.Sin(PeriodAngle) + parent.Translation.Z);
+                float z = (float)(DistanceFromParent * Math.Sin(OrbitalPheta) + parent.Translation.Z);
                 this.SetTranslation(new Vector3(x, y, z));
             }
 
             if (parent is Earth)
                 Orbit.updatePosition(parent.Translation);
-        }
-
-        public void setSize(double ratio)
-        {
-            //double range = ScenicRadius - RealisticRadius;
-            //this.Scale = (float)(RealisticRadius + range * Math.Pow(ratio, 3)) * 10; // y = x^3
-            //this.createTransform();
         }
     }
 }

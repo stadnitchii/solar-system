@@ -9,87 +9,59 @@ namespace SolarSystem
 {
     public class PlanetParameters
     {
-        public Dictionary<string, double> RadiusRealistic { get; private set; }
-        public Dictionary<string, double> RadiusScenic { get; private set; }
-        public Dictionary<string, double> DFSRealistic { get; private set; }
-        public Dictionary<string, double> DFSScenic { get; private set; }
+        public Dictionary<string, double> PlanetRadius { get; private set; }
+        public Dictionary<string, double> DistanceFromSun { get; private set; }
         public Dictionary<string, double> RotationPeriod { get; private set; }
         public Dictionary<string, double> OrbitalPeriod { get; private set; }
         public Dictionary<string, double> AxialTilt { get; private set; }
-        public Dictionary<string, double> InclinationAngle { get; private set; }
-        public Dictionary<string, double> LongitudeAscendingNode { get; private set; }
-        public Dictionary<string, double> LongitudePerihelion { get; private set; }
-        public Dictionary<string, double> Eccentricity { get; private set; }
 
+        public PlanetParameters(
+            Dictionary<string, double> pr, Dictionary<string, double> dfs,
+            Dictionary<string, double> rp, Dictionary<string, double> op,
+            Dictionary<string, double> at
 
-        public PlanetParameters(Dictionary<string, double> rr, Dictionary<string, double> rs,
-            Dictionary<string, double> dfsr, Dictionary<string, double> dfss, Dictionary<string, double> rp,
-            Dictionary<string, double> op, Dictionary<string, double> at, Dictionary<string, double> ia, Dictionary<string, double> lan, Dictionary<string, double> lp, Dictionary<string, double> ec)
+            )
         {
-            this.RadiusRealistic = rr;
-            this.RadiusScenic = rs;
-            this.DFSRealistic = dfsr;
-            this.DFSScenic = dfss;
+            this.PlanetRadius = pr;
+            this.DistanceFromSun = dfs;
             this.RotationPeriod = rp;
             this.OrbitalPeriod = op;
             this.AxialTilt = at;
-            this.InclinationAngle = ia;
-            this.LongitudeAscendingNode = lan;
-            this.LongitudePerihelion = lp;
-            this.Eccentricity = ec;
         }
 
         public static PlanetParameters readFromFile(string path)
         {
-            Dictionary<string, double> rr = new Dictionary<string, double>();
-            Dictionary<string, double> rs = new Dictionary<string, double>();
-            Dictionary<string, double> dfsr = new Dictionary<string, double>();
-            Dictionary<string, double> dfss = new Dictionary<string, double>();
+            Dictionary<string, double> pr = new Dictionary<string, double>();
+            Dictionary<string, double> dfs = new Dictionary<string, double>();
             Dictionary<string, double> rp = new Dictionary<string, double>();
             Dictionary<string, double> op = new Dictionary<string, double>();
             Dictionary<string, double> at = new Dictionary<string, double>();
-            Dictionary<string, double> ia = new Dictionary<string, double>();
-            Dictionary<string, double> lan = new Dictionary<string, double>();
-            Dictionary<string, double> lp = new Dictionary<string, double>();
-            Dictionary<string, double> ec = new Dictionary<string, double>();
 
             List<Dictionary<string, double>> list = new List<Dictionary<string, double>>();
-            list.Add(rr);
-            list.Add(rs);
-            list.Add(dfsr);
-            list.Add(dfss);
+            list.Add(pr);
+            list.Add(dfs);
             list.Add(rp);
             list.Add(op);
             list.Add(at);
-            list.Add(ia);
-            list.Add(lan);
-            list.Add(lp);
-            list.Add(ec);
 
-            string line = "";
-            int count = 0;
-            StreamReader reader = new StreamReader(path);
+            string[] lines = File.ReadAllLines(path);
 
-            while ((line = reader.ReadLine()) != null)
+            for (int i = 0; i < lines.Length; i++)
             {
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-                string[] info = line.Split(new string[] { " ", "  ", "\t" }, StringSplitOptions.RemoveEmptyEntries);
-                addInfo(info, list[count]);
-                count++;
+                if (string.IsNullOrWhiteSpace(lines[i])) throw new IOException($"Could not read {path}, incorrect format.");
+                string[] info = lines[i].Split(new string[] { " ", "\t" }, StringSplitOptions.RemoveEmptyEntries);
+                addInfo(info, list[i]);
             }
 
-            return new PlanetParameters(rr, rs, dfsr, dfss, rp, op, at, ia, lan, lp, ec);
+            return new PlanetParameters(pr, dfs, rp, op, at);
         }
 
         private static void addInfo(string[] info, Dictionary<string, double> cd)
         {
             double[] nums = new double[info.Length];
-            int count = 0;
-            foreach (double num in nums)
+            for (int i = 0; i < nums.Length; i++)
             {
-                nums[count] = double.Parse(info[count]);
-                count++;
+                nums[i] = double.Parse(info[i]);
             }
 
             cd.Add("sun", nums[0]);
@@ -103,7 +75,6 @@ namespace SolarSystem
             cd.Add("uranus", nums[8]);
             cd.Add("neptune", nums[9]);
             cd.Add("pluto", nums[10]);
-
         }
     }
 }

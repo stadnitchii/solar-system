@@ -172,6 +172,7 @@ namespace SolarSystem
         protected override void OnResize(EventArgs e)
         {
             currentScene.WindowResized(this);
+            GL.Viewport(0, 0, this.Width, this.Height);
         }
 
         protected override void OnMouseDown(MouseButtonEventArgs e)

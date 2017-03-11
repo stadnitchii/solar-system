@@ -223,7 +223,7 @@ namespace GLGui
         #region Window Event Handlers
         public void WindowResized(GameWindow gw)
         {
-
+            projection = Matrix4.CreateOrthographicOffCenter(0, gw.Width, gw.Height, 0, 0, 1);
         }
 
         public void MouseDown(OpenTK.Input.MouseButtonEventArgs e)
