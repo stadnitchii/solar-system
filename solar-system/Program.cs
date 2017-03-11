@@ -5,23 +5,17 @@ using System.Collections.Generic;
 using OpenGL;
 using System.Diagnostics;
 using OpenTK.Graphics;
+using OpenTK.Input;
 
 namespace SolarSystem
 {
-    public class GraphicsContext
+    class Program : GameWindow
     {
-        public Vector2 Dimentions { get; set; }
-        public Matrix4 ProjectionMatrix { get; set; }
-    }
-
-    class Program
-    {
+        /// <summary>
+        /// Entry Point
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
-        {
-            new Program();
-        }
-
-        static void GetCapabilities()
         {
             using (GameWindow gw = new GameWindow())
             {
@@ -34,45 +28,28 @@ namespace SolarSystem
                 Console.WriteLine($"shading language version: {GL.GetString(StringName.ShadingLanguageVersion)}");
                 Console.WriteLine($"version: {GL.GetString(StringName.Version)}");
             }
-        }
 
-        /// <summary>
-        /// The window that we will render stuff to
-        /// </summary>
-        private readonly GameWindow _window;
+            new Program();
+        }
 
         /// <summary>
         /// List of Scenes that will be rendered
         /// Each Scene will have its own plannets or potentially solary system
         /// </summary>
-        private List<Scene> _scenes;
-        private Scene _currentScene;
+        private List<Scene> scenes;
+        private Scene currentScene;
 
-        public Program()
+        public Program() : base(1600, 900, GraphicsMode.Default, "Solar System", GameWindowFlags.Default)
         {
-            GetCapabilities();
-            _window = new GameWindow(1600, 900, GraphicsMode.Default, "Solar System", GameWindowFlags.Default);
-
             //settings
-            _window.VSync = VSyncMode.Off;
-
-            //window events
-            _window.Resize += Window_Resize;
-            _window.MouseDown += Window_MouseDown;
-            _window.MouseUp += Window_MouseUp;
-            _window.MouseMove += Window_MouseMove;
-            _window.MouseWheel += Window_MouseWheel;
-            _window.KeyDown += Window_KeyDown;
-
-            _window.RenderFrame += Window_RenderFrame;
-            _window.UpdateFrame += Window_UpdateFrame;
+            this.VSync = VSyncMode.Off;
 
             //init and load content
             InitOpenGL();
             LoadContent();
 
             //run the window
-            _window.Run(60, 120);
+            this.Run(60, 120);
         }
 
         #region Init/LoadContent
@@ -83,7 +60,7 @@ namespace SolarSystem
             GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
             GL.Enable(EnableCap.CullFace);
-            GL.CullFace(CullFaceMode.Back);    
+            GL.CullFace(CullFaceMode.Back);
         }
 
         private void LoadContent()
@@ -91,7 +68,7 @@ namespace SolarSystem
             Stopwatch watch = new Stopwatch();
 
             watch.Start();
-            _scenes = new List<Scene>();
+            scenes = new List<Scene>();
 
             ContentManager contentManager = new ContentManager($@"{Environment.CurrentDirectory}\content\");
             contentManager.ShaderFolder = @"shaders\";
@@ -162,64 +139,67 @@ namespace SolarSystem
             Console.WriteLine($"loaded textures: {watch.ElapsedMilliseconds}");
             watch.Restart();
 
-            var solarSystemScene = new SolarSystemScene(_window, planetParams, contentManager);
+            var solarSystemScene = new SolarSystemScene(this, planetParams, contentManager);
             //var planetSizeScene = new PlanetSIzeScene(context, planetParams, contentManager, 1);
 
-            _scenes.Add(solarSystemScene);
-           // _scenes.Add(planetSizeScene);
-            _currentScene = _scenes[0];
+            scenes.Add(solarSystemScene);
+            // _scenes.Add(planetSizeScene);
+            currentScene = scenes[0];
 
-            Console.WriteLine("created scenes: {0}", watch.ElapsedMilliseconds);
-            watch.Restart();
+            Console.WriteLine($"created scenes: {watch.ElapsedMilliseconds}");
+            watch.Stop();
         }
         #endregion
 
-        private void Window_RenderFrame(object sender, FrameEventArgs e)
+
+        protected override void OnRenderFrame(FrameEventArgs e)
         {
             GL.ClearColor(0f, 0f, 0f, 1f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            _currentScene.Draw(_window);
+            currentScene.Draw(this, e);
 
-            _window.SwapBuffers();
+            this.SwapBuffers();
         }
 
-        private void Window_UpdateFrame(object sender, FrameEventArgs e)
+        protected override void OnUpdateFrame(FrameEventArgs e)
         {
-            _currentScene.Update(_window, e.Time);
+            currentScene.Update(this, e);
         }
 
         #region Window Events
-        private void Window_Resize(object sender, EventArgs e)
+
+        protected override void OnResize(EventArgs e)
         {
-            _currentScene.WindowResized(_window.Width, _window.Height);
+            currentScene.WindowResized(this);
         }
 
-        private void Window_MouseDown(object sender, OpenTK.Input.MouseButtonEventArgs e)
+        protected override void OnMouseDown(MouseButtonEventArgs e)
         {
-            _currentScene.MouseDown(e.X, e.Y);
+            currentScene.MouseDown(e);
         }
 
-        private void Window_MouseUp(object sender, OpenTK.Input.MouseButtonEventArgs e)
+        protected override void OnMouseUp(MouseButtonEventArgs e)
         {
-            _currentScene.MouseUp();
+            currentScene.MouseUp(e);
         }
 
-        private void Window_MouseWheel(object sender, OpenTK.Input.MouseWheelEventArgs e)
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            _currentScene.MouseWheel(e.Delta);
+            currentScene.MouseWheel(e);
         }
 
-        private void Window_MouseMove(object sender, OpenTK.Input.MouseMoveEventArgs e)
+        protected override void OnMouseMove(MouseMoveEventArgs e)
         {
-            _currentScene.MouseMove(e.X, e.Y);
+            currentScene.MouseMove(e);
         }
 
-        private void Window_KeyDown(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
+        protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
-            if (e.Key == OpenTK.Input.Key.Escape)
-                _window.Exit();
-            _currentScene.KeyDown(e);
+            //if escape or alf+f4
+            if(e.Key == OpenTK.Input.Key.Escape || (e.Key == Key.F4 && e.Modifiers == KeyModifiers.Alt))
+                this.Exit();
+            currentScene.KeyDown(e);
         }
         #endregion
     }

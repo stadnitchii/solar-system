@@ -11,24 +11,20 @@ namespace SolarSystem
     interface Scene
     {
 
-        void Draw(GameWindow gw);
+        void Draw(GameWindow gw, FrameEventArgs e);
 
-        void Update(GameWindow gw, double delta);
+        void Update(GameWindow gw, FrameEventArgs e);
 
-        void MouseDown(int x, int y);
+        void MouseDown(MouseButtonEventArgs e);
 
-        void MouseUp();
+        void MouseUp(MouseButtonEventArgs e);
 
-        void MouseWheel(int delta);
+        void MouseWheel(MouseWheelEventArgs e);
 
-        void MouseMove(int x, int y);
+        void MouseMove(MouseMoveEventArgs e);
 
         void KeyDown(KeyboardKeyEventArgs e);
 
-        void WindowResized(int width, int height);
-
-        void setFocus(int index);
-
-        void setHoursPerSecond(double value);
+        void WindowResized(GameWindow gw);
     }
 }

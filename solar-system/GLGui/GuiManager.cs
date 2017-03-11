@@ -132,10 +132,12 @@ namespace GLGui
 
         public ControlCollection Controls { get; private set; }
 
-        private Point _lastMouse;
+        private GameWindow gameWindow;
 
         public GuiManager(GameWindow gw)
         {
+            gameWindow = gw;
+
             controlColors = new Dictionary<Vector4, Control>();
 
             currentControlPickColor = new Vector4(0, 0, 0, 255);
@@ -170,22 +172,19 @@ namespace GLGui
 
             vao = new VAO(verts);
             vao.addAttributeArray(uvs, 2, 1);
-
-            gw.MouseDown += Gw_MouseDown;
-            gw.MouseUp += Gw_MouseUp;
-            gw.MouseWheel += Gw_MouseWheel;
-            gw.MouseMove += Gw_MouseMove;
         }
 
         public void Draw(GameWindow gw)
         {
             GL.Enable(EnableCap.ScissorTest);
+            GL.Disable(EnableCap.DepthTest);
 
             shader.Bind();
             shader.SetUniform("proj", projection);
 
             //draw to color pick buffer
             framebuffer.Bind();
+            GL.Viewport(0, 0, gw.Width, gw.Height);
             GL.Scissor(0, 0, gw.Width, gw.Height);
             GL.ClearColor(Color.White);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -204,9 +203,9 @@ namespace GLGui
                 c.DrawChildren(shader, vao, gw);
             }
 
+            GL.Enable(EnableCap.DepthTest);
             GL.Disable(EnableCap.ScissorTest);
 
-            fr.Draw(Area.Full, framebuffer.Textures[0]);
         }
 
         public void Update(GameWindow gw)
@@ -222,7 +221,12 @@ namespace GLGui
         }
 
         #region Window Event Handlers
-        private void Gw_MouseDown(object sender, OpenTK.Input.MouseButtonEventArgs e)
+        public void WindowResized(GameWindow gw)
+        {
+
+        }
+
+        public void MouseDown(OpenTK.Input.MouseButtonEventArgs e)
         {
             if (selectedControl != null)
             {
@@ -239,20 +243,20 @@ namespace GLGui
             }
         }
 
-        private void Gw_MouseUp(object sender, OpenTK.Input.MouseButtonEventArgs e)
+        public void MouseUp(OpenTK.Input.MouseButtonEventArgs e)
         {
             selectedControl?.RecieveMessage(new Message(MessageId.MouseUp, e));
         }
 
-        private void Gw_MouseWheel(object sender, OpenTK.Input.MouseWheelEventArgs e)
+        public void MouseWheel(OpenTK.Input.MouseWheelEventArgs e)
         {
             selectedControl?.RecieveMessage(new Message(MessageId.MouseWheel, e));
         }
 
-        private void Gw_MouseMove(object sender, OpenTK.Input.MouseMoveEventArgs e)
+        public void MouseMove(OpenTK.Input.MouseMoveEventArgs e)
         {
             //bind our color buffer and get pixel under mouse
-            int height = ((GameWindow)sender).Height;
+            int height = gameWindow.Height;
 
             framebuffer.Bind();
             byte[] pixels = new byte[4];

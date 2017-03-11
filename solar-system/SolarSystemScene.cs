@@ -11,22 +11,21 @@ namespace SolarSystem
 {
     class SolarSystemScene : Scene
     {
-        private ContentManager contentManager;
-        private Camera cam;
-        private List<Planet> planets;
-        private List<PlanetRing> rings;
-        private SkyBox skybox;
-        private double hoursPerSecond;
-        private bool ZAxisLine;
+        ContentManager contentManager;
+        Camera cam;
+        List<Planet> planets;
+        List<PlanetRing> rings;
+        SkyBox skybox;
+        double hoursPerSecond;
 
-        private ShaderProgram defaultShader;
-        private ShaderProgram sunShader;
-        private ShaderProgram lineShader;
-        private ShaderProgram earthShader;
+        ShaderProgram defaultShader;
+        ShaderProgram sunShader;
+        ShaderProgram lineShader;
+        ShaderProgram earthShader;
 
-        //this one is special
-        private Sun sun;
-        private Earth earth;
+        //these ones are special
+        Sun sun;
+        Earth earth;
 
         Framebuffer buffer;
         FrameRenderer frame;
@@ -43,7 +42,6 @@ namespace SolarSystem
         {
             this.contentManager = contentManager;
             this.hoursPerSecond = 1;
-            this.ZAxisLine = false;
             this.defaultShader = contentManager.GetShader("default");
             this.sunShader = contentManager.GetShader("sunShader");
             this.lineShader = contentManager.GetShader("lineShader");
@@ -78,23 +76,28 @@ namespace SolarSystem
 
             #region Gui
             guiManager = new GuiManager(gw);
-            panel = new Panel()
-            {
+            panel = new Panel(){
                 Size = new System.Drawing.Size(200, gw.Height),
                 BackgroundColor = new Vector4(36f / 255, 36f / 255, 36f / 255, 1),
                 BorderColor = new Vector4(1, 1, 1, 1),
                 Location = new System.Drawing.Point(-201, 0),
             };
 
-            var titleLabel = new Label()
-            {
+            var titleLabel = new Label(){          
                 Size = new System.Drawing.Size(200, 50),
                 Location = new System.Drawing.Point(0, 10),
                 Font = new System.Drawing.Font("Arial", 20, System.Drawing.FontStyle.Underline),
+                TextColor = new Vector4(1, 1, 1, 1),
                 Text = "Options"
             };
+
             int y = 70;
-            var label = new Label() { Size = new System.Drawing.Size(120, 25), Location = new System.Drawing.Point(10, y), Text = "Axial Tilt" };
+            var label = new Label() {
+                Size = new System.Drawing.Size(120, 25),
+                Location = new System.Drawing.Point(10, y),
+                TextColor = new Vector4(1, 1, 1, 1),
+                Text = "Axial Tilt"
+            };
             var @switch = new Switch() { Location = new System.Drawing.Point(130, y), On = true };
             @switch.OnToggle += (o, e) =>
             {
@@ -103,7 +106,12 @@ namespace SolarSystem
             panel.Controls.Add(titleLabel, label, @switch);
 
             y += 30;
-            label = new Label() { Size = new System.Drawing.Size(120, 25), Location = new System.Drawing.Point(10, y), Text = "Orbits" };
+            label = new Label() {
+                Size = new System.Drawing.Size(120, 25),
+                Location = new System.Drawing.Point(10, y),
+                TextColor = new Vector4(1, 1, 1, 1),
+                Text = "Orbits"
+            };
             @switch = new Switch() { Location = new System.Drawing.Point(130, y), On = true };
             @switch.OnToggle += (o, e) =>
             {
@@ -112,7 +120,12 @@ namespace SolarSystem
             panel.Controls.Add(label, @switch);
 
             y += 30;
-            label = new Label() { Size = new System.Drawing.Size(120, 25), Location = new System.Drawing.Point(10, y), Text = "Bloom Buffer" };
+            label = new Label() {
+                Size = new System.Drawing.Size(120, 25),
+                Location = new System.Drawing.Point(10, y),
+                TextColor = new Vector4(1, 1, 1, 1),
+                Text = "Bloom Buffer"
+            };
             @switch = new Switch() { Location = new System.Drawing.Point(130, y) };
             @switch.OnToggle += (o, e) =>
             {
@@ -121,8 +134,13 @@ namespace SolarSystem
             panel.Controls.Add(label, @switch);
 
             y += 30;
-            label = new Label() { Size = new System.Drawing.Size(120, 25), Location = new System.Drawing.Point(10, y), Text = "Bloom" };
-            @switch = new Switch() { Location = new System.Drawing.Point(130, y), On = true};
+            label = new Label() {
+                Size = new System.Drawing.Size(120, 25),
+                Location = new System.Drawing.Point(10, y),
+                TextColor = new Vector4(1, 1, 1, 1),
+                Text = "Bloom"
+            };
+            @switch = new Switch() { Location = new System.Drawing.Point(130, y), On = true };
             @switch.OnToggle += (o, e) =>
             {
                 this.bloom = ((Switch)o).On;
@@ -172,7 +190,7 @@ namespace SolarSystem
             //rings.Add(uranusRings);
         }
 
-        public void Draw(GameWindow gw)
+        public void Draw(GameWindow gw, FrameEventArgs e)
         {
             //----------------------------setting up shaders-------------
             #region ShaderUniforms
@@ -222,7 +240,7 @@ namespace SolarSystem
             //frame.Draw(Area.TopLeft, buffer.Textures[0]);
             //frame.Draw(Area.TopRight, buffer.Textures[1]);
 
-            if(showBloomBuffer)
+            if (showBloomBuffer)
                 frame.Draw(Area.BottomRight, blurredTexture);
 
             finalShader.Bind();
@@ -232,7 +250,7 @@ namespace SolarSystem
             guiManager.Draw(gw);
         }
 
-        public void Update(GameWindow gw, double delta)
+        public void Update(GameWindow gw, FrameEventArgs e)
         {
             if (gw.Mouse.X < 200 && panel.Location.X < 0)
                 panel.Location = new System.Drawing.Point(0, 0);
@@ -240,37 +258,41 @@ namespace SolarSystem
                 panel.Location = new System.Drawing.Point(-201, 0);
 
             foreach (Planet p in planets)
-                p.Update(delta, hoursPerSecond);
-            earth.Update(delta, hoursPerSecond);
+                p.Update(e.Time, hoursPerSecond);
+            earth.Update(e.Time, hoursPerSecond);
 
             cam.update();
             guiManager.Update(gw);
         }
 
-        public void MouseDown(int x, int y)
+        public void MouseDown(MouseButtonEventArgs e)
         {
-            cam.mouseDown(x, y);
+            cam.mouseDown(e.X, e.Y);
+            guiManager.MouseDown(e);
         }
 
-        public void MouseUp()
+        public void MouseUp(MouseButtonEventArgs e)
         {
             cam.mouseUp();
+            guiManager.MouseUp(e);
         }
 
-        public void MouseWheel(int delta)
+        public void MouseWheel(MouseWheelEventArgs e)
         {
-            cam.mouseWheel(delta);
+            cam.mouseWheel(e.Delta);
+            guiManager.MouseWheel(e);
         }
 
-        public void MouseMove(int x, int y)
+        public void MouseMove(MouseMoveEventArgs e)
         {
-            cam.mouseMove(x, y);
+            cam.mouseMove(e.X, e.Y);
+            guiManager.MouseMove(e);
         }
 
-        public void WindowResized(int width, int height)
+        public void WindowResized(GameWindow gw)
         {
-            cam.Projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(70), width / (float)height, .1f, 100000f);
-            GL.Viewport(0, 0, width, height);
+            cam.Projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(70), gw.Width / (float)gw.Height, .1f, 100000f);
+            GL.Viewport(0, 0, gw.Width, gw.Height);
         }
 
         public void KeyDown(OpenTK.Input.KeyboardKeyEventArgs e)
@@ -325,12 +347,7 @@ namespace SolarSystem
             //    cam.setFocus(sun);
         }
 
-        public void setFocus(int index)
-        {
-            cam.SetFocus(planets[index]);
-        }
-
-        public void setAxialTiltDraw(bool value)
+        private void setAxialTiltDraw(bool value)
         {
             foreach (Planet p in planets)
                 p.DrawAxisTilt = value;
@@ -338,7 +355,7 @@ namespace SolarSystem
             earth.DrawAxisTilt = value;
         }
 
-        public void setOrbitDraw(bool value)
+        private void setOrbitDraw(bool value)
         {
             foreach (Planet p in planets)
                 p.DrawOrbit = value;
@@ -346,18 +363,13 @@ namespace SolarSystem
             earth.DrawOrbit = value;
         }
 
-        public void setZAxisLineDraw(bool value)
-        {
-            this.ZAxisLine = value;
-        }
-
-        public void setPlanetSize(double value)
+        private void setPlanetSize(double value)
         {
             //foreach (Planet p in planets)
             //    p.setSize(value);
         }
 
-        public void setHoursPerSecond(double value)
+        private void setHoursPerSecond(double value)
         {
             this.hoursPerSecond = value;
         }
